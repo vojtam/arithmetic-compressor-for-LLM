@@ -2,7 +2,7 @@ import collections
 
 # Adapted from https://github.com/nayuki/Reference-arithmetic-coding/blob/master/python/arithmeticcoding.py
 
-STATE_BITS_SIZE = 16
+STATE_BITS_SIZE = 64
 
 
 class ArithmeticCoderBase:
@@ -19,24 +19,34 @@ class ArithmeticCoderBase:
     self.maximum_total = self.minimum_range
     self.state_mask = self.full_range - 1
     self.low, self.high = 0, self.state_mask
+    self.counter = 0
 
-  def update(self, probability, symbol):
+  def update(self, cdf, symbol):
+    print("UPDATE BASE")
+    self.counter += 1
     low = self.low
     high = self.high
+    # print(f"Before update: low={low}, high={high}")  
     if low >= high or (low & self.state_mask) != low or (high & self.state_mask) != high:
-      raise AssertionError("Low or high out of range")
+        print(f"Error state: low={low}, high={high}, state_mask={self.state_mask}")  
+        raise AssertionError("Low or high out of range")
     range = high - low + 1
     if not (self.minimum_range <= range <= self.full_range):
-      raise AssertionError("Range out of range")
+        print(f"Range error: range={range}, minimum_range={self.minimum_range}, full_range={self.full_range}")  
+        raise AssertionError("Range out of range")
 
-    total = max(rng.high for rng in probability.values())
-    symlow = probability[symbol].low
-    symhigh = probability[symbol].high
+    total = max(rng.high for rng in cdf.values())
+    symlow = cdf[symbol].low
+    symhigh = cdf[symbol].high
     if symlow == symhigh:
-      raise ValueError("Symbol has zero frequency")
+        print(symlow, symhigh)
+        print(symbol)
+        print(f'counter: {self.counter}')
+        raise ValueError("Symbol has zero frequency")
 
     newlow = low + symlow * range // total
     newhigh = low + symhigh * range // total - 1
+    # print(f"After update: newlow={newlow}, newhigh={newhigh}")  
     self.low = newlow
     self.high = newhigh
 
@@ -66,8 +76,8 @@ class Encoder(ArithmeticCoderBase):
   def get_encoded(self):
     return self.encoded_data
 
-  def encode_symbol(self, probability, symbol):
-    self.update(probability, symbol)
+  def encode_symbol(self, cdf, symbol):
+    self.update(cdf, symbol)
 
   def finish(self):
     self.encoded_data += [1]

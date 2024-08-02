@@ -16,10 +16,10 @@ class AECompressor:
 
     for symbol in data:
       # Use the model to predict the probability of the next symbol
-      probability = self.model.cdf()
+      cdf = self.model.cdf()
 
       # encode the symbol
-      encoder.encode_symbol(probability, symbol)
+      encoder.encode_symbol(cdf, symbol)
 
       if self.adapt:
         # update the model with the new symbol
