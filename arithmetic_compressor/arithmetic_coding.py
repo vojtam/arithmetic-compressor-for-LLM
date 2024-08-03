@@ -19,34 +19,31 @@ class ArithmeticCoderBase:
     self.maximum_total = self.minimum_range
     self.state_mask = self.full_range - 1
     self.low, self.high = 0, self.state_mask
-    self.counter = 0
 
   def update(self, cdf, symbol):
-    print("UPDATE BASE")
-    self.counter += 1
     low = self.low
     high = self.high
-    # print(f"Before update: low={low}, high={high}")  
+
     if low >= high or (low & self.state_mask) != low or (high & self.state_mask) != high:
-        print(f"Error state: low={low}, high={high}, state_mask={self.state_mask}")  
+        print(f"Error state: low={low}, high={high}, state_mask={self.state_mask}") 
         raise AssertionError("Low or high out of range")
+    
     range = high - low + 1
+
     if not (self.minimum_range <= range <= self.full_range):
         print(f"Range error: range={range}, minimum_range={self.minimum_range}, full_range={self.full_range}")  
         raise AssertionError("Range out of range")
 
-    total = max(rng.high for rng in cdf.values())
+    total = max(rng.high for rng in cdf.values()) # total cumulative frequency
     symlow = cdf[symbol].low
     symhigh = cdf[symbol].high
+
     if symlow == symhigh:
-        print(symlow, symhigh)
-        print(symbol)
-        print(f'counter: {self.counter}')
         raise ValueError("Symbol has zero frequency")
 
-    newlow = low + symlow * range // total
-    newhigh = low + symhigh * range // total - 1
-    # print(f"After update: newlow={newlow}, newhigh={newhigh}")  
+    newlow = low + (symlow * range) // total
+    newhigh = low + (symhigh * range) // total - 1
+    
     self.low = newlow
     self.high = newhigh
 
